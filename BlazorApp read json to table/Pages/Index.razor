@@ -1,0 +1,122 @@
+﻿@page "/"
+@using BlazorApp_read_json_to_table.Services;
+@using ClosedXML.Excel;
+@using System.Reflection;
+@using Microsoft.JSInterop;
+
+
+
+
+@inject IJSRuntime JSRuntime;
+
+
+@inject EmployeeServices EmployeeServices;
+
+@if(employees != null)
+{
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                @foreach(var column in columns)
+                {
+                    <th scope="col">  @column</th>
+                }
+            </tr>
+
+        </thead>
+        <tbody>
+            @foreach(var employee in employees)
+            {
+                <tr>
+                    @foreach(var column in columns)
+                    {
+                        <td scope="row">@employee[column]</td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button @onclick="HandleExportButtonClick">Export to Excel</button>
+}
+else
+{
+    <p>loading....</p>
+}
+
+
+
+<PageTitle>Index</PageTitle>
+
+
+
+
+@code{
+
+    private List<Dictionary<string, object>> employees;
+    private List<string> columns;
+
+    protected override async Task OnInitializedAsync()
+    {
+        employees = await EmployeeServices.GetEmployees();
+        columns = employees.FirstOrDefault()?.Keys.ToList();
+    }
+
+    private async Task ExportToExcel(List<Dictionary<string, object>> data, string fileName)
+    {
+        using var workbook = new XLWorkbook();
+        var worksheet = workbook.Worksheets.Add("Sheet1");
+
+        // Add column headers
+        var col = 1;
+        foreach (var key in data[0].Keys)
+        {
+            worksheet.Cell(1, col).Value = key;
+            col++;
+        }
+
+        // Add rows
+        var row = 2;
+        foreach (var item in data)
+        {
+            col = 1;
+            foreach (var value in item.Values)
+            {
+                worksheet.Cell(row, col).Value = value != null ? value.ToString() : "";
+                col++;
+            }
+            row++;
+        }
+
+        // Set column widths
+        worksheet.Columns().AdjustToContents();
+
+        // Set file name and content type
+        var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+        // Get the file stream
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        var content = stream.ToArray();
+
+        // Download the file
+       // await JSRuntime.InvokeAsync<object>("BlazorDownloadFile", fileName, contentType, content);
+
+        await JSRuntime.InvokeVoidAsync("BlazorDownloadFile", fileName, contentType, content);
+    }
+
+    private async Task HandleExportButtonClick()
+    {
+        // Get your data here
+        var data = new List<Dictionary<string, object>>();
+        data = employees;
+        // ...
+
+        // Call the ExportToExcel method
+        await ExportToExcel(data, "Data.xlsx");
+    }
+
+
+}
+
+

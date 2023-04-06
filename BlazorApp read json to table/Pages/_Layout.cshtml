@@ -1,0 +1,57 @@
+﻿@using Microsoft.AspNetCore.Components.Web
+@namespace BlazorApp_read_json_to_table.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="~/" />
+    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+    <link href="css/site.css" rel="stylesheet" />
+    <link href="BlazorApp read json to table.styles.css" rel="stylesheet" />
+    <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
+    <script>
+        function BlazorDownloadFile(fileName, contentType, content) {
+            // Convert content from base64 to binary data
+            const binaryData = atob(content);
+
+            // Create a new blob object
+            //const blob = new Blob([binaryData], { type: contentType });
+           // URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+            //var blob = new Blob([new Uint8Array(byteArray)], { type: contentType });
+
+            // Create a temporary URL to the blob
+            const url = URL.createObjectURL(new Blob([text], { type: contentType }));
+
+            // Create a link element to trigger the download
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Revoke the URL to free up memory
+            URL.revokeObjectURL(url);
+        }
+        </script>
+</head>
+<body>
+    @RenderBody()
+
+    <div id="blazor-error-ui">
+        <environment include="Staging,Production">
+            An error has occurred. This application may no longer respond until reloaded.
+        </environment>
+        <environment include="Development">
+            An unhandled exception has occurred. See browser dev tools for details.
+        </environment>
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <script src="_framework/blazor.server.js"></script>
+</body>
+</html>
