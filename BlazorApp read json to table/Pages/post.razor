@@ -1,0 +1,85 @@
+﻿@page "/post"
+
+@using System.Text.Json
+@using System.Text
+@inject HttpClient httpClient
+
+
+
+<h3>Enter Data:</h3>
+<div class="form-group">
+    <label for="field1Input">Field 1:</label>
+    <input type="text" class="form-control" id="field1Input"/>
+</div>
+<div class="form-group">
+    <label for="field2Input">Field 2:</label>
+    <input type="text" class="form-control" id="field2Input" />
+</div>
+<button class="btn btn-primary" @onclick="SubmitForm">Submit</button>
+
+@if(Employees != null && columns !=null)
+{
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                @foreach(var column in columns)
+                {
+                    <th scope="col">  @column</th>
+                }
+            </tr>
+
+        </thead>
+        <tbody>
+            @foreach(var employee in Employees)
+            {
+                <tr>
+                    @foreach(var column in columns)
+                    {
+                        <td scope="row">@employee[column]</td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>loading....</p>
+}
+@code {
+    private Dictionary<string, string> data = new Dictionary<string, string>(){
+	{"Geder", "Male"},
+	
+};
+    private List<string> columns;
+    private List<Dictionary<string,object>> Employees = new List<Dictionary<string,object>>();
+    private Dictionary<string, object> jsonResult;
+    
+
+    private async Task SubmitForm()
+    {
+        var json = JsonSerializer.Serialize(data);
+        var response = await httpClient.PostAsync("https://localhost:44359/api/Employeeee", new StringContent(json, Encoding.UTF8, "application/json"));
+        response.EnsureSuccessStatusCode();
+        var jsonResultString = await response.Content.ReadAsStringAsync();
+        var jsonDocumnet = JsonDocument.Parse(jsonResultString);
+
+       
+
+        foreach(var jsonElement in jsonDocumnet.RootElement.EnumerateArray()) {
+                var Employe = new Dictionary<string,object>();
+
+                foreach(var property in jsonElement.EnumerateObject())
+                {
+                    Employe.Add(property.Name, property.Value);
+                }
+
+                Employees.Add(Employe);
+
+            }
+        
+
+       columns =  Employees.FirstOrDefault()?.Keys.ToList();
+       // jsonResult = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonResultString);
+    }
+}
